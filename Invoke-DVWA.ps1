@@ -3,14 +3,14 @@
 
     .SYNOPSIS
 
-    This function will call the Invoke-EuaUserEnum function to login to EUA and pull out job codes and security question/answer information given a username and password. 
+    This function will call t
 
     Author: Jake Miller
     Warning: Code is provided as is and the author take no responsibility for anything bad that happens if you execute this code. Use at your own risk. 
     
     .DESCRIPTION
 
-    This function will call the Invoke-EuaUserEnum function to login to EUA and pull out job codes and security question/answer information given a username and password..
+    This function will call the 
 
     .PARAMETER CredentialFile
 
@@ -18,10 +18,6 @@
 
     .Example
 
-    C:\PS> Get-EUAInfo -CredentialFile .\users_passwords.txt 
-    User Id:   MYID
-    Full Name: Miller, Jake
-    #>
 
     [cmdletbinding()]
     Param(
