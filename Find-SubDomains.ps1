@@ -48,11 +48,12 @@
 
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $True)]
-        $Domain,
+        [Parameter(Mandatory = $True, 
+                   ValueFromPipeline = $true)]
+        [string]$Domain,
     
         [Parameter(Mandatory = $false)]
-        $Proxy
+        [string]$Proxy
     )
 
 # ignore HTTPS certificate warnings
