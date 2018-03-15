@@ -16,40 +16,34 @@
     .PARAMETER Proxy
         Optional. Send requests through a specified proxy. 
         Example: -Proxy http://127.0.0.1:8080
-        
-    .PARAMETER Threads
-        Optional. Specify number of threads to use. Default is 1.
-        
-    .PARAMETER Info
-        Optional. Increase output verbosity. 
 
-    .EXAMPLE
-        PS C:\> Invoke-SiteKick -UrlFile .\urls.txt -Threads 5
-        
-        [*] Loaded 6 URLs for testing
+    .EXAMPLE        
+        PS C:\> Find-SubDomains -Domain github.com
 
-        [*] All URLs tested in 1.0722 seconds
+        [+] Getting subdomains for github.com from crt.sh
+        [+] Getting subdomains for github.com from dnsdumpster.com
+        [+] Getting subdomains for github.com from virustotal.com
+        [+] Getting subdomains for github.com from threatcrowd.com
+        [+] Getting subdomains for github.com from searchdns.netcraft.com
 
-        Title                    URL                        Server   RedirectURL            
-        -----                    ---                        ------   -----------            
-        LAN                      http://192.168.0.1                                         
-        LAN                      https://192.168.0.1/                                       
-        LaconicWolf              http://www.laconicwolf.net AmazonS3 http://laconicwolf.net/
-        Cisco - Global Home Page https://www.cisco.com/     Apache       
-
-    .EXAMPLE  
-        PS C:\> Invoke-SiteKick -UrlFile .\urls.txt -Info | Export-Csv -Path results.csv -NoTypeInformation
-
-        [*] Loaded 6 URLs for testing
-
-        [+] http://192.168.0.1  LAN 
-        [-] Site did not respond
-        [+] https://192.168.0.1/  LAN 
-        [-] Site did not respond
-        [+] http://www.laconicwolf.net http://laconicwolf.net/ LaconicWolf AmazonS3
-        [+] https://www.cisco.com/  Cisco - Global Home Page Apache
-
-        [*] All URLs tested in 2.5457 seconds
+        SubDomains
+        ----------
+        *.branch.github.com
+        *.github.com
+        *.hq.github.com
+        *.id.github.com
+        *.registry.github.com
+        *.review-lab.github.com
+        *.rs.github.com
+        *.smtp.github.com
+        *.stg.github.com
+        3scale.github.com
+        4simple.github.com
+        5509.github.com
+        6pac.github.com
+        aanoaa.github.com
+        abc.github.com
+        abedra.github.com
     #>
 
     [CmdletBinding()]
@@ -58,15 +52,9 @@
         $Domain,
     
         [Parameter(Mandatory = $false)]
-        $Proxy,
-
-        [Parameter(Mandatory = $false)]
-        $Threads=1,
-
-        [Parameter(Mandatory = $false)]
-        [switch]
-        $Info
+        $Proxy
     )
+
 # ignore HTTPS certificate warnings
 add-type @"
     using System.Net;
@@ -350,23 +338,24 @@ add-type @"
     
         foreach ($item in $links) { 
             if ($item -like "*$Domain*") {
-                $SubDomains += New-Object -TypeName PSObject -Property @{"SubDomains" = $item.Trim()}
+                $SubDomains += New-Object -TypeName PSObject -Property @{"SubDomains" = $item.Trim()}                                                                     
             }
         }
 
         return $SubDomains | Sort-Object -Property SubDomains -Unique
     }
-    
+
+    Write-Host ""
 
     $UserAgent = Get-RandomAgent
     
     $Data = @()
-    # Need to fix
-    #Get-DnsDumpsterSubDomains -Domain $Domain
+
     $Data += Get-CrtSubDomains -Domain $Domain
-    $Data +=Get-VirusTotalSubDomains -Domain $Domain
-    $Data +=Get-ThreatCrowdSubDomains -Domain $Domain
-    $Data +=Get-NetCraftSubDomains -Domain $Domain
+    $Data += Get-DnsDumpsterSubDomains -Domain $Domain
+    $Data += Get-VirusTotalSubDomains -Domain $Domain
+    $Data += Get-ThreatCrowdSubDomains -Domain $Domain
+    $Data += Get-NetCraftSubDomains -Domain $Domain
 
     $Data | Sort-Object -Property SubDomains -Unique
 }
