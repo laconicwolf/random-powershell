@@ -121,13 +121,19 @@ add-type @"
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -Method Get -Proxy $Proxy -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
         else {
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -Method Get -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
 
         $SubDomains = @()
@@ -166,13 +172,19 @@ add-type @"
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -SessionVariable session -Method Get -Proxy $Proxy -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
         else {
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -SessionVariable session -Method Get -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
 
         $csrfmiddlewaretoken = $session.Cookies.GetCookies($url).value
@@ -183,26 +195,37 @@ add-type @"
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -WebSession $session -UserAgent $user_agent -Method Post -Body $PostData -Headers @{"Referer" = $URL} -Proxy $Proxy -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
         else {
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -WebSession $session -UserAgent $user_agent -Method Post -Body $PostData -Headers @{"Referer" = $URL} -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
     
 
         $SubDomains = @()
-        $td = ($Response.ParsedHtml.getElementsByTagName('TD') | Where-Object {$_.getAttributeNode('class').Value -eq "col-md-4"}).outerText
-    
+
+        Try {
+            $td = ($Response.ParsedHtml.getElementsByTagName('TD') | Where-Object {$_.getAttributeNode('class').Value -eq "col-md-4"}).outerText
+        }
+        Catch {
+            Write-Host "[-] Error parsing DNSDumpster response. You can try to check manually at $URL. Skipping." -ForegroundColor Yellow
+        }
         foreach ($item in $td) { 
             if ($item -like "*$Domain*") {
                 $item = $item -replace "`n|`r"
                 $items = $item.Split()
                 foreach ($i in $items) {
                     if ($i -like "*$Domain*") {
-                        $SubDomains += New-Object -TypeName PSObject -Property @{"SubDomains" = $item.Trim()}
+                        $SubDomains += New-Object -TypeName PSObject -Property @{"SubDomains" = $i.Trim()}
                     }
                 }
             }
@@ -235,13 +258,19 @@ add-type @"
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -Method Get -Proxy $Proxy -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Either unable to connect with VirusTotal, or they are requesting a CAPTCHA. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
         else {
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -Method Get -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Either unable to connect with VirusTotal, or they are requesting a CAPTCHA. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
 
         $SubDomains = @()
@@ -280,13 +309,19 @@ add-type @"
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -Method Get -Proxy $Proxy -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
         else {
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -Method Get -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
 
         $SubDomains = @()
@@ -325,13 +360,19 @@ add-type @"
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -Method Get -Proxy $Proxy -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
         else {
             Try {
                 $Response = Invoke-WebRequest -Uri $URL -UserAgent $UserAgent -Method Get -TimeoutSec 10
             }
-            Catch {continue}
+            Catch {
+                Write-Host "[-] Unable to connect to $URL. Skipping." -ForegroundColor Yellow
+                return
+            }
         }
 
         $SubDomains = @()
@@ -348,15 +389,35 @@ add-type @"
 
     Write-Host ""
 
-    $UserAgent = Get-RandomAgent
+    # If the input is coming from the pipeline
+    if ($input) {
+        foreach($DomainName in $input) {
+            $UserAgent = Get-RandomAgent
     
-    $Data = @()
+            $Data = @()
 
-    $Data += Get-CrtSubDomains -Domain $Domain
-    $Data += Get-DnsDumpsterSubDomains -Domain $Domain
-    $Data += Get-VirusTotalSubDomains -Domain $Domain
-    $Data += Get-ThreatCrowdSubDomains -Domain $Domain
-    $Data += Get-NetCraftSubDomains -Domain $Domain
+            $Data += Get-CrtSubDomains -Domain $DomainName
+            $Data += Get-DnsDumpsterSubDomains -Domain $DomainName
+            $Data += Get-VirusTotalSubDomains -Domain $DomainName
+            $Data += Get-ThreatCrowdSubDomains -Domain $DomainName
+            $Data += Get-NetCraftSubDomains -Domain $DomainName
 
-    $Data | Sort-Object -Property SubDomains -Unique
+            Write-Host ""
+
+            $Data | Sort-Object -Property SubDomains -Unique
+        }
+    }
+    else {
+        $Data = @()
+
+        $Data += Get-CrtSubDomains -Domain $Domain
+        $Data += Get-DnsDumpsterSubDomains -Domain $Domain
+        $Data += Get-VirusTotalSubDomains -Domain $Domain
+        $Data += Get-ThreatCrowdSubDomains -Domain $Domain
+        $Data += Get-NetCraftSubDomains -Domain $Domain
+
+        Write-Host ""
+
+        $Data | Sort-Object -Property SubDomains -Unique
+    }
 }
