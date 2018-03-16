@@ -3,6 +3,7 @@ Function Get-WebsiteInfo {
     .SYNOPSIS
         Tool for enumerating basic information from websites.
         Author: Jake Miller (@LaconicWolf)
+        
     .DESCRIPTION
         Accepts a single URL or reads a text file of URLs (one per line) and uses 
         Invoke-WebRequests to attempt to visit the each URL. Returns information 
@@ -12,8 +13,10 @@ Function Get-WebsiteInfo {
          
     .PARAMETER UrlFile
         Semi-optional. The file path to the text file containing URLs, one per line.
+        
     .PARAMETER Url
         Semi-optional. The URL you would like to test.
+        
     .PARAMETER Proxy
         Optional. Send requests through a specified proxy. 
         Example: -Proxy http://127.0.0.1:8080
@@ -23,6 +26,7 @@ Function Get-WebsiteInfo {
         
     .PARAMETER Info
         Optional. Increase output verbosity. 
+        
     .EXAMPLE
         PS C:\> Get-WebsiteInfo -UrlFile .\urls.txt -Threads 5
         
@@ -34,6 +38,7 @@ Function Get-WebsiteInfo {
         LAN                      https://192.168.0.1/                                       
         LaconicWolf              http://www.laconicwolf.net AmazonS3 http://laconicwolf.net/
         Cisco - Global Home Page https://www.cisco.com/     Apache       
+        
     .EXAMPLE  
         PS C:\> Get-WebsiteInfo -UrlFile .\urls.txt -Info | Export-Csv -Path results.csv -NoTypeInformation
         [*] Loaded 6 URLs for testing
